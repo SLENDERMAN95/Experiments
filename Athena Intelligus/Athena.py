@@ -10,6 +10,8 @@ import config
 import base64
 from urllib.parse import urlencode
 import config
+import kasa
+import asyncio
 
 #Init Text->Speech
 engine = pyttsx3.init('sapi5')
@@ -235,6 +237,13 @@ def weather(latitude, longitude):
     else:
         return False
 
+#Kasa API Integration
+
+def kasa_discover():
+    found_devices = asyncio.run(kasa.Discover.discover())
+    print(found_devices)
+
+
 #Greeting
 def greet():
     hour = int(datetime.datetime.now().hour)
@@ -249,8 +258,10 @@ def greet():
     elif hour >= 16 and hour < 23:
         speak(f"Good Evening! the time is {time}")
         print(f"Good Evening! the time is {time}")
-    print("Hello, I am Athena. Your virtual assistant. How can I help?")
-    speak("Hello, I am Athena. Your virtual assistant. How can I help?")
+    
+    #Demo mode stuff. Slows down experience
+    #print("Hello, I am Athena. Your virtual assistant. How can I help?")
+    #speak("Hello, I am Athena. Your virtual assistant. How can I help?")
 
 #Speaking
 
@@ -261,7 +272,7 @@ def speak(audio):
 def listen():
     r = speech.Recognizer()
     with speech.Microphone() as source:
-        print("Awaiting Command")
+        print("Adjusting for noise")
         r.pause_threshold = 1
         r.adjust_for_ambient_noise(source)
         audio = r.listen(source)
@@ -274,7 +285,7 @@ def listen():
         speak("Im sorry, I could not hear you")
         return "None"
     except speech.RequestError:
-        print("Please repeat Instruction")
+        print("Instruction Unknown")
         speak("Can you say that again?")
         return "None"
     return query
@@ -285,139 +296,152 @@ if __name__ == "__main__":
     city, country, latitude, longitude = get_location()
     while True:
         query = listen().lower()
-        if 'open' in query:
-            try:
-                print('Opening..')
-                speak('Opening')
-                if 'facebook' in query:
-                    open_browser('https://www.facebook.com')
-                elif 'reddit' in query:
-                    open_browser('https://www.reddit.com')
-                elif 'youtube' in query:
-                    open_browser('https://www.youtube.com')
-                else:
-                    query = query.replace('open ', '')
-                    print('103')
-                    query += ' website '
-                    print("105")
-                    print(query)
-                    URL = google_query(query)[1]
-                    
-                    print(URL)
-                    open_browser(URL)
-            except Exception as e:
-                print(f"Browser could not be opened {e} ")
-                speak("Browser could not be opened")
-        elif 'hello athena' in query:
-            speak("Hello, Garrett. How can I assist?")
-        elif 'what time is it' in query:
-            what_time()
-        elif 'speed test' in query:
-            speed_check()
-        elif 'song' in query:
-            try:
-                index = query.find('song') + 5
-                if index == 4:
-                    print("Please repeat your query")
-                    speak("Please repeat your query")
-                else:
-                    song = query[index:]
-                    data = song_credits(song)
-                    print(data)
-                    artists = []
-                    if data['tracks']['total'] == 0:
-                        print("Song could not be found")
-                        speak("Song could not be found")
-                    else:
-                        for i in range(len(data['tracks']['items'][0]['artists'])):
-                            artists.append(data['tracks']['items']
-                                           [0]['artists'][i]['name'])
-                        if artists == 1:
-                            print(
-                                f'The artist who sang this song is {artists}')
-                            speak(
-                                f'The artist who sang this song is {artists}')
-                        else:
-                            print(
-                                f'The artists who sang this song are {artists}')
-                            speak(
-                                f'The artists who sang this song are {artists}')
-            except Exception as e:
-                print(f"An error occured while fetching song data {e}")
-                speak("An error occured while fetching song data")
-        elif 'location' in query:
-            location = get_location()
-            print(location)
-            speak(f"You are in {location[0]}, {location[1]} at {location[2]} latitude, {location[3]} longitude")
-        elif 'weather' in query or 'temperature' in query:
-            if 'in' in query and query[query.find('in') + 2:query.find('in') + 3] == ' ':
+        if 'hey athena' in query:  #Wake Keyword
+            speak("How can I help?")
+            query = listen().lower()
+            if 'open' in query:
                 try:
-                    city_name = query[query.find('in') + 3:]
-                    api_key = config.api_key
-                    base_url = 'http://api.openweathermap.org/data/2.5/weather?'
-                    complete_url = base_url + "q=" + city_name + "&appid=" + api_key
-                    response = requests.get(complete_url)
-                    x = response.json()
-                    print(x)
+                    print('Opening..')
+                    speak('Opening')
+                    if 'facebook' in query:
+                        open_browser('https://www.facebook.com')
+                    elif 'reddit' in query:
+                        open_browser('https://www.reddit.com')
+                    elif 'youtube' in query:
+                        open_browser('https://www.youtube.com')
+                    else:
+                        query = query.replace('open ', '')
+                        query += ' website '
+                        URL = google_query(query)[1]
+
+                        open_browser(URL)
                 except Exception as e:
-                    print("City could not be found")
-                    speak("City could not be found")
-                if x["cod"] == "404":
-                    print('Please try again')
-                    speak('Please try again')
+                    print(f"Browser could not be opened {e} ")
+                    speak("Browser could not be opened")
+            elif 'what time is it' in query:
+                what_time()
+            elif 'speed test' in query:
+                speed_check()
+            elif 'song' in query:
+                try:
+                    index = query.find('song') + 5
+                    if index == 4:
+                        print("Please repeat your query")
+                        speak("Please repeat your query")
+                    else:
+                        song = query[index:]
+                        data = song_credits(song)
+                        print(data)
+                        artists = []
+                        if data['tracks']['total'] == 0:
+                            print("Song could not be found")
+                            speak("Song could not be found")
+                        else:
+                            for i in range(len(data['tracks']['items'][0]['artists'])):
+                                artists.append(data['tracks']['items']
+                                            [0]['artists'][i]['name'])
+                            if artists == 1:
+                                print(
+                                    f'The artist who sang this song is {artists}')
+                                speak(
+                                    f'The artist who sang this song is {artists}')
+                            else:
+                                print(
+                                    f'The artists who sang this song are {artists}')
+                                speak(
+                                    f'The artists who sang this song are {artists}')
+                except Exception as e:
+                    print(f"An error occured while fetching song data {e}")
+                    speak("An error occured while fetching song data")
+            elif "turn" in query:
+                if "lights" in query:
+                    smartbulb = kasa.SmartBulb(config.bulb1)
+                    if "off" in query:
+                        speak("Turning off lights")
+                        asyncio.run(smartbulb.turn_off())
+                    elif "on" in query:
+                        speak("Turning on lights")
+                        asyncio.run(smartbulb.turn_on())
+
+            elif 'location' in query:
+                location = get_location()
+                print(location)
+                speak(f"You are in {location[0]}, {location[1]} at {location[2]} latitude, {location[3]} longitude")
+            elif 'weather' in query or 'temperature' in query:
+                if 'in' in query and query[query.find('in') + 2:query.find('in') + 3] == ' ':
+                    try:
+                        city_name = query[query.find('in') + 3:]
+                        api_key = config.api_key
+                        base_url = 'http://api.openweathermap.org/data/2.5/weather?'
+                        complete_url = base_url + "q=" + city_name + "&appid=" + api_key
+                        response = requests.get(complete_url)
+                        x = response.json()
+                        print(x)
+                    except Exception as e:
+                        print("City could not be found")
+                        speak("City could not be found")
+                    if x["cod"] == "404":
+                        print('Please try again')
+                        speak('Please try again')
+                    else:
+                        temp = (int)(((x["main"]["temp"]) - 273.15)*(9/5)+32)
+                        feel = (int)(((x["main"]["feels_like"]) - 273.15)*(9/5)+32)
+                        min_ = (int)(((x["main"]["temp_min"]) - 273.15)*(9/5)+32)
+                        max_ = (int)(((x["main"]["temp_max"]) - 273.15)*(9/5)+32)
+                        sunrise = x["sys"]["sunrise"]
+                        sunrise = datetime.datetime.fromtimestamp(
+                            sunrise).strftime('%H:%M')
+                        sunset = x["sys"]["sunset"]
+                        sunset = datetime.datetime.fromtimestamp(
+                            sunset).strftime('%H:%M')
+                        description = x["weather"][0]["description"]
+                        print(
+                            f'The temperature is {temp}°F and it feels like {feel} °F\nThe low is {min_}°F and the high is {max_}°F\nThe predicted forecast is {description}')
+                        speak(
+                            f'The temperature is {temp} degrees Farenheit. It feels like {feel} degrees Farenheit. The low is {min_} degrees Farenheit and the high is {max_} degrees Farenheit. The predicted forecast is {description}')
                 else:
-                    temp = (int)((x["main"]["temp"]) - 273.15)
-                    feel = (int)((x["main"]["feels_like"]) - 273.15)
-                    min_ = (int)((x["main"]["temp_min"]) - 273.15)
-                    max_ = (int)((x["main"]["temp_max"]) - 273.15)
-                    sunrise = x["sys"]["sunrise"]
-                    sunrise = datetime.datetime.fromtimestamp(
-                        sunrise).strftime('%H:%M')
-                    sunset = x["sys"]["sunset"]
-                    sunset = datetime.datetime.fromtimestamp(
-                        sunset).strftime('%H:%M')
-                    description = x["weather"][0]["description"]
-                    print(
-                        f'The temperature is {temp}°C and it feels like {feel} °C\nThe low is {min_}°C and the high is {max_}°C\nThe predicted forecast is {description}')
-                    speak(
-                        f'The temperature is {temp} degrees celsius. It feels like {feel} degrees celsius. The low is {min_} degrees celsius and the high is {max_} degrees celsius. The predicted forecast is {description}')
-            else:
-                x = weather(latitude, longitude)
-                if x == False:
-                    print('Please try again')
-                    speak('Please try again')
-                else:
-                    temp = (int)((x["main"]["temp"]) - 273.15)
-                    feel = (int)((x["main"]["feels_like"]) - 273.15)
-                    min_ = (int)((x["main"]["temp_min"]) - 273.15)
-                    max_ = (int)((x["main"]["temp_max"]) - 273.15)
-                    sunrise = x["sys"]["sunrise"]
-                    sunrise = datetime.datetime.fromtimestamp(
-                        sunrise).strftime('%H:%M')
-                    sunset = x["sys"]["sunset"]
-                    sunset = datetime.datetime.fromtimestamp(
-                        sunset).strftime('%H:%M')
-                    description = x["weather"][0]["description"]
-                    print(
-                        f'The temperature is {temp}°C and it feels like {feel} °C\nThe low is {min_}°C and the high is {max_}°C\nThe predicted forecast is {description}')
-                    speak(
-                        f'The temperature is {temp} degrees celsius. It feels like {feel} degrees celsius. The low is {min_} degrees celsius and the high is {max_} degrees celsius. The predicted forecast is {description}')
-                    now = int(datetime.datetime.now().hour)
-                    temp = sunrise[0:2]
-                    temp = int(temp)
-                    delta_og = int(sunset[0:2])
-                    if delta_og > 12:
-                        delta = delta_og - 12
-                    if now > temp and now < delta_og:
-                        minutes = sunset.find(":")
-                        time = '' + str(delta) + sunset[minutes:]
-                        print(f"The sun will fall at {time} pm today")
-                        speak(f"The sun will fall at {time} pm today")
-                    elif now < temp:
-                        print(f"The sun will rise at {sunrise} am today")
-                        speak(f"The sun will rise at {sunrise} am today")
-            
-        elif ('shutdown' in query and query[query.find('shutdown') + 4:query.find('shutdown') + 5] == '') or ('thank you' in query and query[query.find('thank you') + 9:query.find('thank you') + 10] == ''):
+                    x = weather(latitude, longitude)
+                    if x == False:
+                        print('Please try again')
+                        speak('Please try again')
+                    else:
+                        temp = (int)(((x["main"]["temp"]) - 273.15)*(9/5)+32)
+                        feel = (int)(((x["main"]["feels_like"]) - 273.15)*(9/5)+32)
+                        min_ = (int)(((x["main"]["temp_min"]) - 273.15)*(9/5)+32)
+                        max_ = (int)(((x["main"]["temp_max"]) - 273.15)*(9/5)+32)
+                        sunrise = x["sys"]["sunrise"]
+                        sunrise = datetime.datetime.fromtimestamp(
+                            sunrise).strftime('%H:%M')
+                        print(sunrise)
+                        sunset = x["sys"]["sunset"]
+                        sunset = datetime.datetime.fromtimestamp(
+                            sunset).strftime('%H:%M')
+                        print(sunset)
+                        description = x["weather"][0]["description"]
+                        print(
+                            f'The temperature is {temp}°F and it feels like {feel} °F\nThe low is {min_}°F and the high is {max_}°F\nThe predicted forecast is {description}')
+                        speak(
+                            f'The temperature is {temp} degrees Farenheit. It feels like {feel} degrees Farenheit. The low is {min_} degrees Farenheit and the high is {max_} degrees Farenheit. The predicted forecast is {description}')
+                        speak(f"The sun will rise at {sunrise} and set at {sunset}")
+                        #Something Broken here. Lotta drama for what can be done in one line
+                        #now = int(datetime.datetime.now().hour)
+                        #temp = sunrise[0:2]
+                        #temp = int(temp)
+                        #delta_og = int(sunset[0:2])
+                        #if delta_og > 12:
+                        #    delta = delta_og - 12
+                        #if now > temp and now < delta_og:
+                        #    minutes = sunset.find(":")
+                        #    time = '' + str(delta) + sunset[minutes:]
+                        #    print(f"The sun will fall at {time} pm today")
+                        #    speak(f"The sun will fall at {time} pm today")
+                        #elif now < temp:
+                        #    print(f"The sun will rise at {sunrise} am today")
+                        #    speak(f"The sun will rise at {sunrise} am today")
+            if "thank you" in query:
+                break    
+        
+        elif "shutdown" in query or "shut down" in query:
             print('Have a wonderful day!')
             speak('Have a wonderful day!')
             break
