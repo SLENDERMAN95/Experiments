@@ -220,8 +220,6 @@ def get_location():
         speak('Error, location could not be retrieved')
 
 #Weather Function
-import config
-# Check Weather
 def weather(latitude, longitude):
     try:
         api_key = config.api_key
