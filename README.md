@@ -8,7 +8,7 @@ supposed to. Assisting you.
 #The parts in quotations are the Keywords that trigger specific actions. Try to keep queries short and containing a keyword. Some are quite specific
 
 ### Weather
-Check your weather or weather of a city "... Weather?" or "...Weather in <City>?"
+Check your weather or weather of a city "... Weather?" or "...Weather in (City)?"
 
 ### Location
 In case you forget where you are, this will tell you exactly where you are. Including your GPS coordinates. "...Location"
@@ -17,10 +17,10 @@ In case you forget where you are, this will tell you exactly where you are. Incl
 Will require your own config file but On/Off functionaility is there right now. Planning Hue/Brightness function soon. "Turn ... lights on/off"
 
 ### Spotify API
-So far you can ask who performed a song. Returns Top Spotify Result for that song. Additional functionality planned  "...Song <Song Name>"
+So far you can ask who performed a song. Returns Top Spotify Result for that song. Additional functionality planned  "...Song (Song Name)"
 
 ### Browser Support
-Open any site in your default brwoser. "Open <Site name> "
+Open any site in your default brwoser. "Open (Site name) "
 
 ### Speed Test
 Performs a Speed Test and reads the results back to you. "...Speedtest" 
