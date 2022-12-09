@@ -13,6 +13,7 @@ import config
 import kasa
 import asyncio
 
+
 #Init Text->Speech
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
@@ -273,11 +274,12 @@ def listen():
     r = speech.Recognizer()
     with speech.Microphone() as source:
         print("Adjusting for noise")
-        r.pause_threshold = 1
+        r.pause_threshold = 0.5
         r.adjust_for_ambient_noise(source)
         audio = r.listen(source)
     try:
         print("Intrepreting...")
+        config.function_sound()
         query = r.recognize_google(audio, language='en-CA')
         print("User said: {}".format(query))
     except speech.UnknownValueError:
