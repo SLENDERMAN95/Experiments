@@ -5,7 +5,7 @@ this virtual assitant only reaches out when you want it to. No saved audio recor
 supposed to. Assisting you. 
 
 ### Current Features
-#The parts in quotations are the Keywords that trigger specific actions. Try to keep queries short and containing a keyword. Some are quite specific
+# The parts in quotations are the Keywords that trigger specific actions. Try to keep queries short and containing a keyword. Some are quite specific
 
 ### Weather
 Check your weather or weather of a city "... Weather?" or "...Weather in (City)?"
