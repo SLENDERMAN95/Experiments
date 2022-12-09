@@ -4,26 +4,26 @@
 this virtual assitant only reaches out when you want it to. No saved audio recordings, no data sent out in the background, just a Virtual Assistant doing the one thing it's
 supposed to. Assisting you. 
 
-##Current Features
+## Current Features
 #The parts in quotations are the Keywords that trigger specific actions. Try to keep queries short and containing a keyword. Some are quite specific
 
-#Weather
+# Weather
 Check your weather or weather of a city "... Weather?" or "...Weather in <City>?"
 
-#Location
+# Location
 In case you forget where you are, this will tell you exactly where you are. Including your GPS coordinates. "...Location"
 
-#Kasa Bulb Support
+# Kasa Bulb Support
 Will require your own config file but On/Off functionaility is there right now. Planning Hue/Brightness function soon. "Turn ... lights on/off"
 
-#Spotify API
+# Spotify API
 So far you can ask who performed a song. Returns Top Spotify Result for that song. Additional functionality planned  "...Song <Song Name>"
 
-#Browser Support
+# Browser Support
 Open any site in your default brwoser. "Open <Site name> "
 
-#Speed Test
+# Speed Test
 Performs a Speed Test and reads the results back to you. "...Speedtest" 
 
-#Time
+# Time
 Tells you what time it is. Not like you dont have a clock in your pocket, corner of the screen, and/or wrist. But heres one that's hands free "...Time" 
