@@ -1,3 +1,5 @@
+import subprocess
+
 from bs4 import BeautifulSoup
 import requests
 from googlesearch import search
@@ -9,10 +11,10 @@ import speedtest
 import config
 import base64
 from urllib.parse import urlencode
-import config
 import kasa
 import asyncio
-
+import wikipedia as wiki
+import os
 
 #Init Text->Speech
 engine = pyttsx3.init('sapi5')
@@ -220,6 +222,8 @@ def get_location():
         speak('Error, location could not be retrieved')
 
 #Weather Function
+import config
+# Check Weather
 def weather(latitude, longitude):
     try:
         api_key = config.api_key
@@ -247,7 +251,10 @@ def kasa_discover():
 def greet():
     hour = int(datetime.datetime.now().hour)
     minute = int(datetime.datetime.now().minute)
-    time = " ".join([str(hour),str(minute)])
+    if minute < 10:
+        time = " oh ".join([str(hour), str(minute)])
+    else:
+        time = " ".join([str(hour),str(minute)])
     if hour >= 0 and hour < 12:
         speak(f"Good Morning! the time is {time}")
         print(f"Good Morning! the time is {time}")
@@ -262,8 +269,23 @@ def greet():
     #print("Hello, I am Athena. Your virtual assistant. How can I help?")
     #speak("Hello, I am Athena. Your virtual assistant. How can I help?")
 
-#Speaking
+#Get top google result and solution from stack overflow
+def stackoverflow(url):
+    SITE = url
+    print(SITE)
+    page = requests.get(SITE, headers=headers)
+    soup = BeautifulSoup(page.content, 'html.parser')
 
+    for correct in soup.find_all('div', attrs={'class': 'answer js-answer accepted-answer js-accepted-answer'}):
+        answer = correct.find('div', attrs={'class': 's-prose js-post-body'})
+        ##formatted = ""
+        # for paragraph in answer.find_all('p'):
+        #  formatted += paragraph.text
+        #  formatted += '\n'
+        print('answer found')
+        return answer.text
+
+#Speaking
 def speak(audio):
     engine.say(audio)
     engine.runAndWait()
@@ -277,7 +299,8 @@ def listen():
         audio = r.listen(source)
     try:
         print("Intrepreting...")
-        config.function_sound()
+        #Ding of death
+        #config.function_sound()
         query = r.recognize_google(audio, language='en-CA')
         print("User said: {}".format(query))
     except speech.UnknownValueError:
@@ -294,6 +317,8 @@ def listen():
 if __name__ == "__main__":
     greet()
     city, country, latitude, longitude = get_location()
+    kasa_discover()
+
     while True:
         query = listen().lower()
         if 'hey athena' in query:  #Wake Keyword
@@ -318,6 +343,52 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(f"Browser could not be opened {e} ")
                     speak("Browser could not be opened")
+            elif 'run' in query:
+                if 'task manager' in query:
+                    current_dir = r"C:\WINDOWS\system32"
+                    subprocess.Popen(os.path.join(current_dir, "Taskmgr.exe"))
+                elif 'steam' in query:
+                    current_dir = r"C:\Program Files (x86)\Steam"
+                    subprocess.Popen(os.path.join(current_dir, "steam.exe"))
+                elif 'spotify' in query:
+                    current_dir = r"C:\Users\guita\AppData\Roaming\Spotify"
+                    subprocess.Popen(os.path.join(current_dir, "Spotify.exe"))
+
+
+            elif 'search' in query:
+                if "wikipedia" in query:
+                    try:
+                        print('Searching...')
+                        speak('Searching...')
+                        query = query.replace(' wikipedia', '')
+                        query = query.replace('search ', '')
+                        results = wiki.summary(query, sentences=1)
+                        speak("According to Wikipedia")
+                        print("According to Wikipedia : {} ".format(results))
+                        speak(results)
+                    except Exception as e:
+                        print("Could not search wikipedia")
+                        speak("Could not search wikipedia")
+                elif 'google' in query:
+                    speak("Searching...")
+                    query = query.replace('search ', '')
+                    query = query.replace('google ', '')
+                    query = query.replace('for ', '')
+                    URL = google_query(query)[1]
+                    open_browser(URL)
+                elif 'stackoverflow' in query or 'stack overflow' in query:
+                    speak("Searching...")
+                    query = query.replace('search ', '')
+                    query = query.replace('stack overflow', 'stackoverflow.com:')
+                    query = query.replace('stackoverflow', 'stackoverflow.com:')
+                    print(query)
+                    query = query.replace('for', '')
+                    URL = google_query(query)[0]
+                    print(f"the selected url is {URL}")
+                    speak(stackoverflow(URL))
+
+
+
             elif 'what time is it' in query:
                 what_time()
             elif 'speed test' in query:
@@ -354,14 +425,68 @@ if __name__ == "__main__":
                     print(f"An error occured while fetching song data {e}")
                     speak("An error occured while fetching song data")
             elif "turn" in query:
+                smartbulb = kasa.SmartBulb(config.bulb1)
+                asyncio.run(smartbulb.update())
+
                 if "lights" in query:
-                    smartbulb = kasa.SmartBulb(config.bulb1)
+                    current_bright = smartbulb.brightness
                     if "off" in query:
                         speak("Turning off lights")
                         asyncio.run(smartbulb.turn_off())
                     elif "on" in query:
                         speak("Turning on lights")
                         asyncio.run(smartbulb.turn_on())
+                    elif "down" in query:
+                        speak("Dimming lights")
+                        if current_bright < 25:
+                            speak("Turning off lights")
+                            asyncio.run(smartbulb.turn_off())
+                        else:
+                            try:
+                                asyncio.new_event_loop().run_until_complete(smartbulb.set_brightness(current_bright - 25))
+                                asyncio.new_event_loop().run_until_complete(smartbulb.update())
+                            except Exception as e:
+                                speak("Sorry, there was an error")
+                                print(e)
+                    elif "up" in query:
+                        speak("Turning brightness up")
+                        print(current_bright)
+                        if current_bright > 75:
+                            try:
+                                asyncio.new_event_loop().run_until_complete(smartbulb.set_brightness(100))
+                                asyncio.new_event_loop().run_until_complete(smartbulb.update())
+                            except Exception as e:
+                                speak("Sorry, there was an error")
+                                print(e)
+                        else:
+
+                            try:
+                                asyncio.new_event_loop().run_until_complete(smartbulb.set_brightness(current_bright + 25))
+                                asyncio.new_event_loop().run_until_complete(smartbulb.update())
+                            except Exception as e:
+                                speak("Sorry, there was an error")
+                                print(e)
+
+                    elif "red" in query:
+                        try:
+                            asyncio.new_event_loop().run_until_complete(smartbulb.set_hsv(0,98,85))
+                            asyncio.new_event_loop().run_until_complete(smartbulb.update())
+                        except Exception as e:
+                            speak("Sorry. error in color change")
+
+                    elif "white" in query:
+                        try:
+                            asyncio.new_event_loop().run_until_complete(smartbulb.set_hsv(0, 0, 100))
+                            asyncio.new_event_loop().run_until_complete(smartbulb.update())
+                        except Exception as e:
+                            speak("Sorry. error in color change")
+
+                    elif "warm" in query:
+                        try:
+                            asyncio.new_event_loop().run_until_complete(smartbulb.set_hsv(51, 13, 95))
+                            asyncio.new_event_loop().run_until_complete(smartbulb.update())
+                        except Exception as e:
+                            speak("Sorry. error in color change")
 
             elif 'location' in query:
                 location = get_location()
