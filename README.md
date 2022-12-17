@@ -4,10 +4,10 @@
 this virtual assitant only reaches out when you want it to. No saved audio recordings, no data sent out in the background, just a Virtual Assistant doing the one thing it's
 supposed to. Assisting you. 
 
-### Current Features
+## Current Features
 # The parts in quotations are the Keywords that trigger specific actions. Try to keep queries short and containing a keyword. Some are quite specific
 
-###Search Features
+### Search Features
 Designated search features for Wikipedia and StackOverflow
 
 Wikipedia: "Search Wikipedia for..." will find the best result and read the page summary
