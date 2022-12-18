@@ -14,6 +14,8 @@ Wikipedia: "Search Wikipedia for..." will find the best result and read the page
 
 StackOverflow: "Search StackOverflow for..." will find the accepted solution and read it back. This one is a bit rough and may not give expected result
 
+Wookiepedia: I am a Star Wars nerd so I added it as a giggle. "search ... galaxy for ..."
+
 ### Weather
 Check your weather or weather of a city "... Weather?" or "...Weather in (City)?"
 
