@@ -24,7 +24,7 @@ engine.setProperty('voice', voices[1].id)
 
 #Google Search
 def google_query(query):
-    print("in google_query")
+    print(f"in google_query: {query}")
     link = []
     for j in search(query, num_results=10):
         link.append(j)
@@ -285,6 +285,24 @@ def stackoverflow(url):
         print('answer found')
         return answer.text
 
+def wookiepedia(url):
+    SITE = url
+    print(SITE)
+    page = requests.get(SITE, headers=headers)
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    for correct in soup.find_all('div', attrs={'class': 'main-container'}):
+        answer = correct.find('div', attrs={'class': 'resizable-container'})
+        answer = correct.find('div', attrs={'class': 'page has-right-rail'})
+        answer = correct.find('div', attrs={'class': 'page_main'})
+        answer = correct.find('div', attrs={'class': 'content'})
+        answer = correct.find('div', attrs={'class': 'mw-content-text'})
+        answer = correct.find('div', attrs={'class': 'mw-parser-output'})
+        answer = correct.find_all('p')
+        print('answer found')
+        return(answer[7].text)
+
+
 #Speaking
 def speak(audio):
     engine.say(audio)
@@ -317,11 +335,11 @@ def listen():
 if __name__ == "__main__":
     greet()
     city, country, latitude, longitude = get_location()
-    kasa_discover()
+    #kasa_discover()
 
     while True:
         query = listen().lower()
-        if 'hey athena' in query:  #Wake Keyword
+        if 'athena' in query:  #Wake Keyword
             speak("How can I help?")
             query = listen().lower()
             if 'open' in query:
@@ -369,23 +387,41 @@ if __name__ == "__main__":
                     except Exception as e:
                         print("Could not search wikipedia")
                         speak("Could not search wikipedia")
+                elif 'galaxy' in query:
+                    try:
+                        query = query.replace('search', '')
+                        query = query.replace('galaxy', 'starwars.fandom.com: ')
+                        query = query.replace('the', '')
+                        query = query.replace('for', '')
+
+                        URL = google_query(query)
+                        print(f"the url is {URL[1]}")
+                        speak(wookiepedia(URL[1]))
+                    except Exception as e:
+                        speak("Too many requests")
                 elif 'google' in query:
-                    speak("Searching...")
-                    query = query.replace('search ', '')
-                    query = query.replace('google ', '')
-                    query = query.replace('for ', '')
-                    URL = google_query(query)[1]
-                    open_browser(URL)
+                    try:
+                        speak("Searching...")
+                        query = query.replace('search ', '')
+                        query = query.replace('google ', '')
+                        query = query.replace('for ', '')
+                        URL = google_query(query)[1]
+                        open_browser(URL)
+                    except Exception as e:
+                        speak("Too many requests")
                 elif 'stackoverflow' in query or 'stack overflow' in query:
-                    speak("Searching...")
-                    query = query.replace('search ', '')
-                    query = query.replace('stack overflow', 'stackoverflow.com:')
-                    query = query.replace('stackoverflow', 'stackoverflow.com:')
-                    print(query)
-                    query = query.replace('for', '')
-                    URL = google_query(query)[0]
-                    print(f"the selected url is {URL}")
-                    speak(stackoverflow(URL))
+                    try:
+                        speak("Searching...")
+                        query = query.replace('search ', '')
+                        query = query.replace('stack overflow', 'stackoverflow.com:')
+                        query = query.replace('stackoverflow', 'stackoverflow.com:')
+                        print(query)
+                        query = query.replace('for', '')
+                        URL = google_query(query)[0]
+                        print(f"the selected url is {URL}")
+                        speak(stackoverflow(URL))
+                    except Exception as e:
+                        speak("Too many requests")
 
 
 
