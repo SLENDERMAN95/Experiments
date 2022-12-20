@@ -8,7 +8,7 @@ Assisting you.
 # The parts in quotations are the Keywords that trigger specific actions. Try to keep queries short and containing a keyword. Some are quite specific
 
 ### Search Features
-Designated search features for Wikipedia and StackOverflow
+Designated search features for Wikipedia, StackOverflow, and Wookiepedia
 
 Wikipedia: "Search Wikipedia for..." will find the best result and read the page summary
 
