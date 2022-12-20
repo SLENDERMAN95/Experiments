@@ -41,4 +41,8 @@ Performs a Speed Test and reads the results back to you. "...Speedtest"
 ### Time
 Tells you what time it is. Not like you dont have a clock in your pocket, corner of the screen, and/or wrist. But heres one that's hands free "...Time" 
 
+### IMDB/RT Support
+
+Get the information such as cast, director, release, synopsis from IMDB. Its hit or miss, I'm not a pro. Will tweak a bit to make a smoother interaction "Search...movie/actor/series/documentary..." 
+
 
