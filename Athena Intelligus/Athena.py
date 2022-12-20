@@ -1,4 +1,6 @@
 import subprocess
+
+import spotipy
 from bs4 import BeautifulSoup
 import requests, random
 from googlesearch import search
@@ -15,6 +17,10 @@ import asyncio
 import wikipedia as wiki
 import os
 import imdb
+from spotipy import Spotify
+import SpotifyMethods
+
+
 
 #Init Text->Speech
 engine = pyttsx3.init('sapi5')
@@ -63,7 +69,18 @@ def speed_check():
 def open_browser(url):
     webbrowser.open_new_tab(url)
 
-#Spotify API 
+#Spotify API
+
+# Async functions not implemented yet
+async def get_current_song(spotify: Spotify) -> str:
+    if spotify.currently_playing() is None:
+        return "Nothing is playing"
+    song_name = spotify.currently_playing()['item']['name']
+    artist_name = spotify.currently_playing()['item']['artists'][0]['name']
+    return f"{song_name} - {artist_name}"
+
+
+
 class SpotifyAPI(object):
     access_token = None
     access_token_expires = datetime.datetime.now()
@@ -357,7 +374,7 @@ def rotten_tomatoes_score(query):
             if len(i) > 1:
                 return i
     except Exception as e:
-        print('Could not retrieve tomatometer score')
+        print(f'Could not retrieve tomatometer score{e}')
         speak('Could not retrieve tomatometer score')
 
 #IMDB
@@ -442,7 +459,8 @@ if __name__ == "__main__":
                         if check == -1:
                             query = query.replace(' documentary', '')
                         else:
-                            query = query.replace(' movie', '')
+                            query = query.replace(' movies', '')
+                            query = query.replace('search', '')
                         print(f'Searching for {query}...')
                         speak(f'Searching database for {query}')
                         moviesDB = imdb.IMDb()
@@ -616,8 +634,6 @@ if __name__ == "__main__":
                     except Exception as e:
                         speak("Too many requests")
 
-
-
             elif 'what time is it' in query:
                 what_time()
             elif 'speed test' in query:
@@ -777,21 +793,7 @@ if __name__ == "__main__":
                         speak(
                             f'The temperature is {temp} degrees Farenheit. It feels like {feel} degrees Farenheit. The low is {min_} degrees Farenheit and the high is {max_} degrees Farenheit. The predicted forecast is {description}')
                         speak(f"The sun will rise at {sunrise} and set at {sunset}")
-                        #Something Broken here. Lotta drama for what can be done in one line
-                        #now = int(datetime.datetime.now().hour)
-                        #temp = sunrise[0:2]
-                        #temp = int(temp)
-                        #delta_og = int(sunset[0:2])
-                        #if delta_og > 12:
-                        #    delta = delta_og - 12
-                        #if now > temp and now < delta_og:
-                        #    minutes = sunset.find(":")
-                        #    time = '' + str(delta) + sunset[minutes:]
-                        #    print(f"The sun will fall at {time} pm today")
-                        #    speak(f"The sun will fall at {time} pm today")
-                        #elif now < temp:
-                        #    print(f"The sun will rise at {sunrise} am today")
-                        #    speak(f"The sun will rise at {sunrise} am today")
+
             if "thank you" in query:
                 break    
         
