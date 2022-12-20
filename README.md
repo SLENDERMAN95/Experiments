@@ -32,6 +32,8 @@ Dimmer Feature "Turn ... lights down/up" Adjusts brightness up or down by 25 per
 ### Spotify API
 So far you can ask who performed a song. Returns Top Spotify Result for that song. Additional functionality planned  "...Song (Song Name)"
 
+**Media controls coming very soon!**
+
 ### Browser Support
 Open any site in your default brwoser. "Open (Site name) "
 
