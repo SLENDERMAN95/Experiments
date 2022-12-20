@@ -14,6 +14,7 @@ import kasa
 import asyncio
 import wikipedia as wiki
 import os
+import imdb
 
 #Init Text->Speech
 engine = pyttsx3.init('sapi5')
@@ -235,8 +236,6 @@ def get_location():
         print(f'Error, location could not be retrieved {e}')
         speak('Error, location could not be retrieved')
 
-#Weather Function
-import config
 # Check Weather
 def weather(latitude, longitude):
     try:
@@ -344,6 +343,37 @@ def listen():
         speak("Can you say that again?")
         return "None"
     return query
+#Rotten Tomatoes
+
+def rotten_tomatoes_score(query):
+    try:
+        query += query + " Rotten Tomatoes"
+        URL = google_query(query)[0]
+        page = requests.get(URL, headers=headers)
+        soup = BeautifulSoup(page.content, 'html.parser')
+        res = soup.find(class_='mop-ratings-wrap__percentage').get_text()
+        check = res.split(' ')
+        for i in check:
+            if len(i) > 1:
+                return i
+    except Exception as e:
+        print('Could not retrieve tomatometer score')
+        speak('Could not retrieve tomatometer score')
+
+#IMDB
+def find_imdb(query):
+    try:
+        query += ' IMDB'
+        URL = google_query(query)[0]
+        page = requests.get(URL, headers=headers)
+        html_content = page.text
+        soup = BeautifulSoup(html_content, 'lxml')
+        title = soup.title.string
+        title = title[0:-7]
+        return title
+    except Exception as e:
+        print(f'Movie could not be found: {e}')
+        speak('Movie could not be found')
 
 
 if __name__ == "__main__":
@@ -389,12 +419,15 @@ if __name__ == "__main__":
 
 
             elif 'search' in query:
+                query = query.replace('for', '')
                 if "wikipedia" in query:
                     try:
                         print('Searching...')
                         speak('Searching...')
-                        query = query.replace(' wikipedia', '')
                         query = query.replace('search ', '')
+                        query = query.replace(' wikipedia', '')
+
+
                         results = wiki.summary(query, sentences=1)
                         speak("According to Wikipedia")
                         print("According to Wikipedia : {} ".format(results))
@@ -402,6 +435,151 @@ if __name__ == "__main__":
                     except Exception as e:
                         print("Could not search wikipedia")
                         speak("Could not search wikipedia")
+                if 'movie' in query or 'documentary' in query or 'movies' in query:
+                    try:
+                        check = query.find(' movies')
+
+                        if check == -1:
+                            query = query.replace(' documentary', '')
+                        else:
+                            query = query.replace(' movie', '')
+                        print(f'Searching for {query}...')
+                        speak(f'Searching database for {query}')
+                        moviesDB = imdb.IMDb()
+                        movies = moviesDB.search_movie(find_imdb(query))
+                        id = movies[0].getID()
+                        score = rotten_tomatoes_score(find_imdb(query))
+                        movie = moviesDB.get_movie(id)
+                        title = movie['title']
+                        year = movie['year']
+                        rating = movie['rating']
+                        directors = movie['directors']
+                        casting = movie['cast']
+                        this = ''
+                        for i in range(8):
+                            this += str(casting[i]) + ', '
+                        if len(directors) != 1:
+                            out = (f'Directed by {str(directors[0])} and ')
+                            del directors[0]
+                            for i in range(len(directors)):
+                                if i != len(directors) - 1:
+                                    out += (f'{str(directors[i])} and ')
+                                else:
+                                    out += (str(directors[i]))
+                        else:
+                            out = (f'Directed by : {str(directors[0])}')
+                        print(
+                            f'{title} ({year})\nIMDB - {rating}\nRotten Tomato - {score}')
+                        print(out)
+                        print(f'Cast includes : {this}')
+                        speak(
+                            f'{title} is a {year} movie with an IMDB rating of {rating} and a Rotten Tomato score of {score} {out}. Notable cast members include {this}')
+                        print('Would you like to hear the synopsis?')
+                        speak('Would you like to hear the synopsis?')
+                        query = listen().lower()
+                        keys = list(movie.keys())
+                        if 'yes' in query:
+                            if 'plot outline' not in keys:
+                                synopsis = movie['plot'][0]
+                            else:
+                                synopsis = movie['plot outline']
+                            print(synopsis)
+                            speak(synopsis)
+                    except Exception as e:
+                        print(f'Could not retrive movie title {e}')
+                        speak('Could not retrive movie title')
+                elif 'actor' in query or 'actress' in query or 'producer' in query or 'writer' in query or 'director' in query:
+                    try:
+                        check = {'actor': query.find('actor'), 'actress': query.find('actress'), 'producer': query.find(
+                            'producer'), 'writer': query.find('writer'), 'director': query.find('director')}
+                        keys = list(check.keys())
+                        role = ''
+                        for j in keys:
+                            if check[j] != -1:
+                                query = query.replace(f' {j}', '')
+                                role = j
+                                break
+                        print(f'Searching for {query}...')
+                        speak(f'Searching database for {query}')
+                        peopleDB = imdb.IMDb()
+                        people = peopleDB.search_person(query)
+                        id = people[0].getID()
+                        person = peopleDB.get_person(id)
+                        name = person['name']
+                        birth = person['birth date']
+                        bio = str(person['mini biography'][0])
+                        res = [i for i in range(
+                            len(bio)) if bio.startswith('. ', i)]
+                        for i in res:
+                            if i >= 500:
+                                bio = bio[0:i]
+                                break
+                        keys = list(person['filmography'][0].keys())
+                        films = person['filmography'][0][keys[0]]
+                        this = ''
+                        for i in range(10):
+                            this += str(films[i]) + ', '
+                            this = this.replace(' ()', '')
+                        print(f'{bio}\n{name} is known for {this}')
+                        speak(f'{bio}\n{name} is known for {this}')
+                    except Exception as e:
+                        print('Could not retrive requested information')
+                        speak('Could not retrive requested information')
+                elif 'series' in query or 'tv' in query:
+                    try:
+                        check = query.find(' series')
+                        if check == -1:
+                            query = query.replace(' tv', '')
+                        else:
+                            query = query.replace(' series', '')
+                        print(f'Searching for {query}...')
+                        speak(f'Searching database for {query}')
+                        seriesDB = imdb.IMDb()
+                        query = find_imdb(query)
+                        query = query[0:query.find('(TV Series')]
+                        res = seriesDB.search_movie(query)
+                        id = res[0].getID()
+                        score = rotten_tomatoes_score(query)
+                        series = seriesDB.get_movie(id)
+                        name = series['smart canonical title']
+                        kind = series['kind']
+                        length = series['series years']
+                        keys = list(series.keys())
+                        if 'seasons' in keys:
+                            seasons = series['seasons']
+                        else:
+                            seasons = ''
+                        rating = series['rating']
+                        if 'plot outline' not in keys:
+                            synopsis = series['plot'][0]
+                        else:
+                            synopsis = series['plot outline']
+                        casting = series['cast']
+                        if seasons != '':
+                            print(
+                                f'{name} is a {kind} that has an IMDB rating of {rating} and a Rotten Tomato score of {score} with {seasons} seasons. The series has been ongoing from {length}')
+                            speak(
+                                f'{name} is a {kind} that has an IMDB rating of {rating} and a Rotten Tomato score of {score}with {seasons} seasons. The series has been ongoing from {length}')
+                        else:
+                            print(
+                                f'{name} is a {kind} that has an IMDB rating of {rating} and a Rotten Tomato score of {score}. The series has been ongoing from {length}')
+                            speak(
+                                f'{name} is a {kind} that has an IMDB rating of {rating} and a Rotten Tomato score of {score}. The series has been ongoing from {length}')
+                        this = ''
+                        for i in range(8):
+                            this += str(casting[i]) + ', '
+                        print(f'Cast includes : {this}')
+                        speak(f'Cast includes : {this}')
+                        print('Would you like to hear the synopsis?')
+                        speak('Would you like to hear the synopsis?')
+                        query = listen().lower()
+                        if 'yes' in query:
+                            print(f'{synopsis}')
+                            speak(synopsis)
+                    except Exception as e:
+                        print('Could not retrive requested information')
+                        speak('Could not retrive requested information')
+
                 elif 'galaxy' in query:
                     try:
                         query = query.replace('search', '')
