@@ -1,22 +1,22 @@
 import subprocess
 
-import spotipy
-from bs4 import BeautifulSoup
+import spotipy #pip install spotipy
+from bs4 import BeautifulSoup #pip install bs4
 import requests, random
-from googlesearch import search
-import pyttsx3
-import speech_recognition as speech
-import datetime
+from googlesearch import search #pip install google
+import pyttsx3 #pip install pyttsx3
+import speech_recognition as speech #pip install SpeechRecognition
+import datetime 
 import webbrowser
-import speedtest
-import config
+import speedtest #pip install speedtest
+import config 
 import base64
 from urllib.parse import urlencode
-import kasa
-import asyncio
-import wikipedia as wiki
+import kasa #pip install python-kasa
+import asyncio #pip install asyncio
+import wikipedia as wiki #pip install wikipedia-api
 import os
-import imdb
+import imdb #pip install imdbpy
 from spotipy import Spotify
 import SpotifyMethods
 
