@@ -507,6 +507,7 @@ if __name__ == "__main__":
                         print(f'Could not retrive movie title {e}')
                         speak('Could not retrive movie title')
                 elif 'actor' in query or 'actress' in query or 'producer' in query or 'writer' in query or 'director' in query:
+                    query = query.replace('search ', '')
                     try:
                         check = {'actor': query.find('actor'), 'actress': query.find('actress'), 'producer': query.find(
                             'producer'), 'writer': query.find('writer'), 'director': query.find('director')}
@@ -610,6 +611,7 @@ if __name__ == "__main__":
                         speak(wookiepedia(URL[1]))
                     except Exception as e:
                         speak("Too many requests")
+                        print("Too many requests")
                 elif 'google' in query:
                     try:
                         speak("Searching...")
@@ -620,6 +622,7 @@ if __name__ == "__main__":
                         open_browser(URL)
                     except Exception as e:
                         speak("Too many requests")
+                        print("Too many requests")
                 elif 'stackoverflow' in query or 'stack overflow' in query:
                     try:
                         speak("Searching...")
@@ -633,6 +636,7 @@ if __name__ == "__main__":
                         speak(stackoverflow(URL))
                     except Exception as e:
                         speak("Too many requests")
+                        print("Too many requests")
 
             elif 'what time is it' in query:
                 what_time()
